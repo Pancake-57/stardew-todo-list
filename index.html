@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桌面小组件</title>
+    <style>
+        @font-face {
+            font-family: 'Zpix';
+            src: url('fonts/zpix.ttf') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-weight: 0;
+        }
+
+        body {
+            font-family: 'Zpix', monospace;
+            background: transparent;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-app-region: drag;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease;
+            position: relative;
+        }
+
+        body:hover {
+            border-color: #333;
+        }
+
+        body:hover .lock-btn-fixed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body:hover .unlock-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+
+        .container {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-app-region: no-drag;
+            padding: 10px;
+            background: transparent;
+            border-radius: 10px;
+            margin: 10px;
+            color: inherit;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            margin-top: -10px;
+            -webkit-app-region: no-drag;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .container:hover .toolbar {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .close-btn {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .container:hover .close-btn {
+            opacity: 1;
+        }
+
+        /* 隐藏滚动条 */
+        .content {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .content::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            background: rgb(153, 102, 51);
+            color: white;
+            cursor: pointer;
+            font-family: 'Zpix';
+            font-size: 14px;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .toolbar button:hover {
+            background: rgb(122, 81, 40);
+            border-color: #3d2510;
+        }
+
+        .toolbar button.settings-btn {
+            background: rgb(153, 102, 51);
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .toolbar button.settings-btn:hover {
+            background: rgb(122, 81, 40);
+            border-color: #3d2510;
+        }
+
+        .toolbar button.quest-btn {
+            background: rgb(153, 102, 51);
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .toolbar button.quest-btn:hover {
+            background: rgb(122, 81, 40);
+            border-color: #3d2510;
+        }
+
+        .toolbar button.lock-btn {
+            display: none;
+        }
+
+        .lock-btn-fixed {
+            display: block;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .lock-btn-fixed img {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .lock-btn-fixed:hover img {
+            opacity: 0.8;
+        }
+
+        .unlock-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .unlock-btn img {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .unlock-btn:hover img {
+            opacity: 0.8;
+        }
+
+        .refresh-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 70px;
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn img {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .refresh-btn:hover img {
+            opacity: 0.8;
+        }
+
+        body:hover .refresh-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .locked .refresh-btn {
+            display: none !important;
+        }
+
+        .locked .lock-btn-fixed {
+            display: none !important;
+        }
+
+        .locked .unlock-btn {
+            display: block;
+        }
+
+        body.locked {
+            border-color: transparent !important;
+        }
+
+        body.locked:hover {
+            border-color: transparent !important;
+        }
+
+        .locked .toolbar {
+            opacity: 0 !important;
+            transform: translateY(-20px) !important;
+            pointer-events: none !important;
+        }
+
+        .locked .close-btn {
+            opacity: 0 !important;
+        }
+
+        .locked [contenteditable="true"] {
+            pointer-events: none !important;
+        }
+
+        .locked .todo-checkbox {
+            pointer-events: auto !important;
+        }
+
+        .locked .modal {
+            display: none !important;
+        }
+
+        .quest-content {
+            display: none;
+            background: transparent;
+            padding: 25px 0px;
+            margin: 5px;
+            color: inherit;
+            line-height: 1.6;
+            -webkit-app-region: no-drag;
+            font-weight: 0;
+        }
+
+        .quest-title {
+            font-size: 4em;
+            font-weight: 0;
+            font-weight: lighter;
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top:-60px;
+            color: inherit;
+            outline: none;
+            min-height: 1.2em;
+        }
+
+        .quest-description {
+            font-size: 1.2em;
+            font-weight: 580;
+            margin-bottom: 5px;
+            text-align: left;
+            outline: none;
+            min-height: 1.2em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            -webkit-app-region: no-drag;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(235, 222, 204, 0.9);
+            padding: 20px;
+            border: 4px solid #5c3a18;
+            box-shadow: 
+                0 0 0 2px black,
+                inset 4px 4px 0 rgba(255, 255, 255, 0.2),
+                inset -4px -4px 0 rgba(0, 0, 0, 0.2);
+            min-width: 400px;
+            font-family: 'Zpix';
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 3px solid #5c3a18;
+            padding-bottom: 5px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .setting-item label {
+            min-width: 120px;
+            font-weight: bold;
+        }
+
+        .setting-item input[type="color"] {
+            width: 60px;
+            height: 35px;
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            cursor: pointer;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .setting-item input[type="range"] {
+            flex: 1;
+            height: 12px;
+            background: #5c3a18;
+            border-radius: 0;
+            outline: none;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: rgb(153, 102, 51);
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            cursor: pointer;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .setting-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: 2px solid #5c3a18;
+            border-radius: 0;
+            cursor: pointer;
+            font-family: 'Zpix';
+            font-size: 14px;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-buttons .save-btn {
+            background: rgb(153, 102, 51);
+            color: white;
+        }
+
+        .modal-buttons .save-btn:hover {
+            background: rgb(122, 81, 40);
+            border-color: #3d2510;
+        }
+
+        .modal-buttons .cancel-btn {
+            background: rgb(153, 153, 153);
+            color: white;
+            border: 2px solid #666;
+        }
+
+        .modal-buttons .cancel-btn:hover {
+            background: rgb(122, 122, 122);
+            border-color: #444;
+        }
+
+        .modal-buttons .restore-btn {
+            background: rgb(153, 102, 51);
+            color: white;
+            border: 2px solid #5c3a18;
+        }
+
+        .modal-buttons .restore-btn:hover {
+            background: rgb(122, 81, 40);
+            border-color: #3d2510;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover img {
+            filter: brightness(0.7);
+        }
+
+        .close-modal img {
+            width: 100%;
+            height: 100%;
+            transition: filter 0.3s ease;
+        }
+
+        .modal hr {
+            border: 0;
+            border-top: 1px solid rgb(153, 102, 51);
+            margin: 20px 0;
+        }
+
+        .editable-area {
+            min-height: 500px;
+            outline: none;
+            line-height: 1.6;
+            color: inherit;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 5px;
+            color: inherit;
+        }
+
+        .todo-checkbox {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            border: 2px solid currentColor;
+            border-radius: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .todo-checkbox:checked::before {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            display: block;
+            text-align: center;
+            line-height: 14px;
+        }
+
+        .todo-text {
+            flex: 1;
+            min-height: 20px;
+            outline: none;
+            color: inherit;
+        }
+
+        .todo-text::selection {
+            background: var(--selection-bg, rgba(73, 49, 24, 0.3));
+            color: inherit;
+        }
+
+        .todo-text::-moz-selection {
+            background: var(--selection-bg, rgba(73, 49, 24, 0.3));
+            color: inherit;
+        }
+
+        .text-item::selection,
+        .quest-title::selection,
+        .quest-description::selection {
+            background: var(--selection-bg, rgba(73, 49, 24, 0.3));
+            color: inherit;
+        }
+
+        .text-item::-moz-selection,
+        .quest-title::-moz-selection,
+        .quest-description::-moz-selection {
+            background: var(--selection-bg, rgba(73, 49, 24, 0.3));
+            color: inherit;
+        }
+
+        .todo-text:focus {
+            outline: none;
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+        }
+
+        .text-item {
+            margin: 8px 0;
+            padding: 5px;
+            min-height: 20px;
+            outline: none;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            color: white;
+            border: none;
+            border-radius: 0;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            -webkit-app-region: no-drag;
+        }
+
+        .close-btn:hover img {
+            filter: brightness(0.7);
+        }
+
+        .close-btn img {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <button class="lock-btn-fixed" id="lockBtn" onclick="toggleLock()">
+        <img src="images/解锁.svg" alt="锁定">
+    </button>
+    
+    <button class="unlock-btn" id="unlockBtn" onclick="toggleLock()">
+        <img src="images/锁定.svg" alt="解锁">
+    </button>
+    
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshQuest()">
+        <img src="images/刷新.svg" alt="刷新">
+    </button>
+    
+    <div class="container">
+        <button class="close-btn" onclick="window.close()">
+            <img src="images/lamb-close .svg" alt="Close">
+        </button>
+        
+        <div class="toolbar">
+            <button onclick="addText()">添加文字</button>
+            <button onclick="addTodo()">添加待办</button>
+            <button class="quest-btn" onclick="toggleQuest()">
+                <img src="images/White_Chicken.png" alt="任务" style="width: 20px; height: 20px; vertical-align: middle;">
+                任务板
+            </button>
+            <button class="settings-btn" onclick="openSettings()">设置</button>
+        </div>
+        
+        <!-- 设置模态窗口 -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeSettings()">
+                    <img src="images/lamb-close .svg" alt="Close">
+                </button>
+                <h2 style="margin-bottom: 30px;">设置</h2>
+                
+                <div class="settings-section">
+                    <h3>字体设置</h3>
+                    <div class="setting-item">
+                        <label for="fontColor">字体颜色:</label>
+                        <input type="color" id="fontColor" value="#333333">
+                    </div>
+                    <div class="setting-item">
+                        <label for="fontSize">字体大小:</label>
+                        <input type="range" id="fontSize" min="12" max="32" value="16">
+                        <span class="setting-value" id="fontSizeValue">16px</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>背景设置</h3>
+                    <div class="setting-item">
+                        <label for="bgColor">背景颜色:</label>
+                        <input type="color" id="bgColor" value="#ffffff">
+                    </div>
+                    <div class="setting-item">
+                        <label for="bgOpacity">不透明度:</label>
+                        <input type="range" id="bgOpacity" min="0" max="100" value="90">
+                        <span class="setting-value" id="opacityValue">90%</span>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button class="cancel-btn" onclick="closeSettings()">取消</button>
+                    <button class="restore-btn" onclick="restoreDefaults()">恢复默认</button>
+                    <button class="save-btn" onclick="saveSettings()">保存</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="quest-content" id="questContent">
+            <div class="quest-title" contenteditable="true">需 要 帮 助</div>
+            <div class="quest-description" contenteditable="true">
+                我需要红鳐鱼来作为我最新发明的动力。只有那玩意可以作为动力！— 玛鲁<br><br>
+                - 225 金，货到付款<br>
+                - 让玛鲁很开心
+            </div>
+        </div>
+            <div class="editable-area" id="editableArea" contenteditable="true">
+                <!-- 内容将在这里动态添加 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editableArea = document.getElementById('editableArea');
+        const settingsModal = document.getElementById('settingsModal');
+        
+        // 默认设置
+        let currentSettings = {
+            fontColor: '#333333',
+            fontSize: 16,
+            bgColor: '#ffffff',
+            bgOpacity: 90
+        };
+
+        function getVibrantColor(hexColor) {
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const avg = (r + g + b) / 3;
+            
+            let newR, newG, newB;
+            
+            if (max === min) {
+                newR = Math.min(255, avg + 80);
+                newG = Math.min(255, avg + 80);
+                newB = Math.min(255, avg + 80);
+            } else {
+                if (r === max) {
+                    newR = Math.min(255, r + 40);
+                    newG = Math.min(255, g + 30);
+                    newB = Math.min(255, b + 30);
+                } else if (g === max) {
+                    newR = Math.min(255, r + 30);
+                    newG = Math.min(255, g + 40);
+                    newB = Math.min(255, b + 30);
+                } else {
+                    newR = Math.min(255, r + 30);
+                    newG = Math.min(255, g + 30);
+                    newB = Math.min(255, b + 40);
+                }
+            }
+            
+            return `rgba(${newR}, ${newG}, ${newB}, 0.3)`;
+        }
+
+        function updateSelectionColor() {
+            const vibrantColor = getVibrantColor(currentSettings.fontColor);
+            document.documentElement.style.setProperty('--selection-bg', vibrantColor);
+        }
+
+        function addText(select = false) {
+            const textItem = document.createElement('div');
+            textItem.className = 'text-item';
+            textItem.contentEditable = true;
+            textItem.textContent = '点击编辑文字...';
+            
+            editableArea.appendChild(textItem);
+            
+            if (select) {
+                textItem.focus();
+                selectText(textItem);
+            }
+        }
+
+        function addTodo(select = false) {
+            const todoItem = document.createElement('div');
+            todoItem.className = 'todo-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'todo-checkbox';
+            checkbox.onchange = function() {
+                toggleTodoCompletion(this);
+            };
+            
+            const todoText = document.createElement('div');
+            todoText.className = 'todo-text';
+            todoText.contentEditable = true;
+            todoText.textContent = '点击编辑待办事项...';
+            
+            todoItem.appendChild(checkbox);
+            todoItem.appendChild(todoText);
+            editableArea.appendChild(todoItem);
+            
+            if (select) {
+                todoText.focus();
+                selectText(todoText);
+            } else {
+                todoText.focus();
+            }
+        }
+
+        function toggleTodoCompletion(checkbox) {
+            const todoText = checkbox.nextElementSibling;
+            if (checkbox.checked) {
+                // 获取当前字体颜色并生成浅色版本用于文字
+                const baseColor = currentSettings.fontColor;
+                const lightColor = lightenColor(baseColor, 40);
+                
+                // 计算深色低饱和度的圆圈颜色
+                const checkboxColor = darkenDesaturateColor(baseColor, 50, 70);
+                
+                // 设置复选框背景和边框颜色
+                checkbox.style.backgroundColor = lightColor;
+                checkbox.style.borderColor = lightColor;
+                
+                todoText.classList.add('completed');
+                todoText.style.color = lightColor;
+            } else {
+                todoText.classList.remove('completed');
+                todoText.style.color = '';
+                
+                // 重置复选框样式
+                checkbox.style.backgroundColor = '';
+                checkbox.style.borderColor = '';
+            }
+        }
+
+        function lightenColor(hex, saturationPercent) {
+            // 将十六进制颜色转换为RGB
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            
+            // RGB转HSL
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            
+            // 降低饱和度
+            s = s * (saturationPercent / 100);
+            
+            // HSL转RGB
+            let r1, g1, b1;
+            if (s === 0) {
+                r1 = g1 = b1 = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r1 = hue2rgb(p, q, h + 1/3);
+                g1 = hue2rgb(p, q, h);
+                b1 = hue2rgb(p, q, h - 1/3);
+            }
+            
+            // 转换回十六进制
+            const toHex = (c) => {
+                const hex = Math.round(c * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+            
+            return '#' + toHex(r1) + toHex(g1) + toHex(b1);
+        }
+
+        function darkenDesaturateColor(hex, saturationPercent, darknessPercent) {
+            // 将十六进制颜色转换为RGB
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            
+            // RGB转HSL
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            
+            // 降低饱和度和亮度
+            s = s * (saturationPercent / 100);
+            l = l * (darknessPercent / 100);
+            
+            // HSL转RGB
+            let r1, g1, b1;
+            if (s === 0) {
+                r1 = g1 = b1 = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r1 = hue2rgb(p, q, h + 1/3);
+                g1 = hue2rgb(p, q, h);
+                b1 = hue2rgb(p, q, h - 1/3);
+            }
+            
+            // 转换回十六进制
+            const toHex = (c) => {
+                const hex = Math.round(c * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+            
+            return '#' + toHex(r1) + toHex(g1) + toHex(b1);
+        }
+
+        function selectText(element) {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        // 设置相关功能
+        function openSettings() {
+            // 加载当前设置到表单
+            document.getElementById('fontColor').value = currentSettings.fontColor;
+            document.getElementById('fontSize').value = currentSettings.fontSize;
+            document.getElementById('fontSizeValue').textContent = currentSettings.fontSize + 'px';
+            document.getElementById('bgColor').value = currentSettings.bgColor;
+            document.getElementById('bgOpacity').value = currentSettings.bgOpacity;
+            document.getElementById('opacityValue').textContent = currentSettings.bgOpacity + '%';
+            
+            settingsModal.style.display = 'block';
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        function saveSettings() {
+            // 获取表单值
+            const fontColor = document.getElementById('fontColor').value;
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const bgColor = document.getElementById('bgColor').value;
+            const bgOpacity = parseInt(document.getElementById('bgOpacity').value);
+            
+            // 更新当前设置
+            currentSettings = {
+                fontColor: fontColor,
+                fontSize: fontSize,
+                bgColor: bgColor,
+                bgOpacity: bgOpacity
+            };
+            
+            // 应用设置
+            applySettings();
+            updateSelectionColor();
+            
+            // 保存到本地存储
+            localStorage.setItem('widgetSettings', JSON.stringify(currentSettings));
+            
+            closeSettings();
+        }
+
+        function restoreDefaults() {
+            // 默认设置
+            const defaultSettings = {
+                fontColor: '#493118',
+                fontSize: 20,
+                bgColor: '#ffffff',
+                bgOpacity: 0
+            };
+            
+            // 更新表单值
+            document.getElementById('fontColor').value = defaultSettings.fontColor;
+            document.getElementById('fontSize').value = defaultSettings.fontSize;
+            document.getElementById('fontSizeValue').textContent = defaultSettings.fontSize + 'px';
+            document.getElementById('bgColor').value = defaultSettings.bgColor;
+            document.getElementById('bgOpacity').value = defaultSettings.bgOpacity;
+            document.getElementById('opacityValue').textContent = defaultSettings.bgOpacity + '%';
+            
+            // 更新当前设置
+            currentSettings = defaultSettings;
+            
+            // 应用设置
+            applySettings();
+            updateSelectionColor();
+            
+            // 保存到本地存储
+            localStorage.setItem('widgetSettings', JSON.stringify(currentSettings));
+        }
+
+        function applySettings() {
+            // 应用字体颜色和大小通过动态样式表
+            updateContentStyle();
+            
+            // 应用背景颜色和透明度
+            const contentArea = document.querySelector('.content');
+            const opacity = currentSettings.bgOpacity / 100;
+            contentArea.style.backgroundColor = hexToRgba(currentSettings.bgColor, opacity);
+            
+            // 更新窗口边框颜色
+            updateWindowBorderColor();
+        }
+
+        function updateContentStyle() {
+            // 计算深色低饱和度的圆圈颜色
+            const checkboxColor = darkenDesaturateColor(currentSettings.fontColor, 50, 70);
+            
+            // 创建或更新动态样式
+            let styleElement = document.getElementById('content-style');
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = 'content-style';
+                document.head.appendChild(styleElement);
+            }
+            
+            styleElement.textContent = `
+                .content, .editable-area, .text-item, .todo-text:not(.completed), .todo-item {
+                    color: ${currentSettings.fontColor} !important;
+                    font-size: ${currentSettings.fontSize}px !important;
+                }
+                .todo-checkbox {
+                    border-color: ${checkboxColor} !important;
+                }
+            `;
+        }
+
+        function updateWindowBorderColor() {
+            // 动态更新窗口边框颜色
+            const style = document.createElement('style');
+            style.id = 'border-style';
+            
+            style.textContent = `
+                body:hover {
+                    border-color: ${currentSettings.fontColor};
+                }
+            `;
+            
+            // 移除旧的样式（如果存在）
+            const oldStyle = document.getElementById('border-style');
+            if (oldStyle) {
+                oldStyle.remove();
+            }
+            
+            document.head.appendChild(style);
+        }
+
+        function hexToRgba(hex, opacity) {
+            // 转换十六进制颜色为RGBA
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('widgetSettings');
+            if (savedSettings) {
+                currentSettings = JSON.parse(savedSettings);
+                applySettings();
+                updateSelectionColor();
+            }
+        }
+
+        // 初始化设置
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的设置
+            loadSettings();
+            updateSelectionColor();
+            
+            // 添加示例内容
+            addText(false);
+            addTodo(false);
+            
+            // 透明度滑块事件
+            const opacitySlider = document.getElementById('bgOpacity');
+            const opacityValue = document.getElementById('opacityValue');
+            
+            opacitySlider.addEventListener('input', function() {
+                opacityValue.textContent = this.value + '%';
+            });
+            
+            // 字体大小滑块事件
+            const fontSizeSlider = document.getElementById('fontSize');
+            const fontSizeValue = document.getElementById('fontSizeValue');
+            
+            fontSizeSlider.addEventListener('input', function() {
+                fontSizeValue.textContent = this.value + 'px';
+            });
+            
+            // 点击模态窗口外部关闭
+            settingsModal.addEventListener('click', function(e) {
+                if (e.target === settingsModal) {
+                    closeSettings();
+                }
+            });
+        });
+
+        // 支持键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        addText();
+                        break;
+                    case 't':
+                        e.preventDefault();
+                        addTodo();
+                        break;
+                    case ',':
+                        e.preventDefault();
+                        openSettings();
+                        break;
+                }
+            }
+            
+            // ESC键关闭设置
+        if (e.key === 'Escape' && settingsModal.style.display === 'block') {
+            closeSettings();
+        }
+    });
+
+    // 任务显示功能
+    const questContent = document.getElementById('questContent');
+    const refreshBtn = document.getElementById('refreshBtn');
+    let questVisible = false;
+
+    function toggleQuest() {
+        if (!questVisible) {
+            questContent.style.display = 'block';
+            editableArea.style.display = 'none';
+            refreshBtn.style.display = 'block';
+            questVisible = true;
+        } else {
+            questContent.style.display = 'none';
+            editableArea.style.display = 'block';
+            refreshBtn.style.display = 'none';
+            questVisible = false;
+        }
+    }
+
+    // 刷新任务板功能
+    function refreshQuest() {
+        const questTitle = questContent.querySelector('.quest-title');
+        const questDescription = questContent.querySelector('.quest-description');
+        
+        // 恢复初始文本
+        questTitle.innerHTML = '需 要 帮 助';
+        questDescription.innerHTML = '我需要红鳐鱼来作为我最新发明的动力。只有那玩意可以作为动力！— 玛鲁<br><br>- 225 金，货到付款<br>- 让玛鲁很开心';
+    }
+
+    // 锁定功能
+    let isLocked = false;
+
+    function toggleLock() {
+        isLocked = !isLocked;
+        
+        if (isLocked) {
+            document.body.classList.add('locked');
+        } else {
+            document.body.classList.remove('locked');
+        }
+    }
+
+
+    </script>
+</body>
+</html>
