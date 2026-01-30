@@ -4,6 +4,7 @@ A to-do list desktop widget adapted for Startdew Valley Help-Wanted theme wallpa
 ## Copyright Notice
 
 This project is not affiliated with Stardew Valley or ConcernedApe.
+
 All copyrights related to Stardew Valley are owned by ConcernedApe.
 
 ## Font Attribution
