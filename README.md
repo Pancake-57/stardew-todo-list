@@ -1,4 +1,4 @@
-# stardew-todo-list
+# Stardew-Todo-List
 A to-do list desktop widget adapted for Startdew Valley Help-Wanted theme wallpaper.
 
 ## Copyright Notice
