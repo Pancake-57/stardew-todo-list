@@ -667,6 +667,14 @@
                     </div>
                 </div>
                 
+                <div class="settings-section">
+                    <h3>系统设置</h3>
+                    <div class="setting-item">
+                        <label for="autoLaunch">开机自启:</label>
+                        <input type="checkbox" id="autoLaunch" style="width: 20px; height: 20px; cursor: pointer;">
+                    </div>
+                </div>
+                
                 <div class="modal-buttons">
                     <button class="cancel-btn" onclick="closeSettings()">取消</button>
                     <button class="restore-btn" onclick="restoreDefaults()">恢复默认</button>
@@ -699,8 +707,19 @@
             fontColor: '#333333',
             fontSize: 16,
             bgColor: '#ffffff',
-            bgOpacity: 90
+            bgOpacity: 90,
+            autoLaunch: false
         };
+        
+        // 监听开机自启状态
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.on('auto-launch-status', (event, enabled) => {
+            currentSettings.autoLaunch = enabled;
+            const autoLaunchCheckbox = document.getElementById('autoLaunch');
+            if (autoLaunchCheckbox) {
+                autoLaunchCheckbox.checked = enabled;
+            }
+        });
 
         function getVibrantColor(hexColor) {
             const r = parseInt(hexColor.slice(1, 3), 16);
@@ -941,6 +960,7 @@
             document.getElementById('bgColor').value = currentSettings.bgColor;
             document.getElementById('bgOpacity').value = currentSettings.bgOpacity;
             document.getElementById('opacityValue').textContent = currentSettings.bgOpacity + '%';
+            document.getElementById('autoLaunch').checked = currentSettings.autoLaunch;
             
             settingsModal.style.display = 'block';
         }
@@ -955,13 +975,15 @@
             const fontSize = parseInt(document.getElementById('fontSize').value);
             const bgColor = document.getElementById('bgColor').value;
             const bgOpacity = parseInt(document.getElementById('bgOpacity').value);
+            const autoLaunch = document.getElementById('autoLaunch').checked;
             
             // 更新当前设置
             currentSettings = {
                 fontColor: fontColor,
                 fontSize: fontSize,
                 bgColor: bgColor,
-                bgOpacity: bgOpacity
+                bgOpacity: bgOpacity,
+                autoLaunch: autoLaunch
             };
             
             // 应用设置
@@ -970,6 +992,9 @@
             
             // 保存到本地存储
             localStorage.setItem('widgetSettings', JSON.stringify(currentSettings));
+            
+            // 发送开机自启设置到主进程
+            ipcRenderer.send('set-auto-launch', autoLaunch);
             
             closeSettings();
         }
@@ -980,7 +1005,8 @@
                 fontColor: '#493118',
                 fontSize: 20,
                 bgColor: '#ffffff',
-                bgOpacity: 0
+                bgOpacity: 0,
+                autoLaunch: false
             };
             
             // 更新表单值
@@ -990,6 +1016,7 @@
             document.getElementById('bgColor').value = defaultSettings.bgColor;
             document.getElementById('bgOpacity').value = defaultSettings.bgOpacity;
             document.getElementById('opacityValue').textContent = defaultSettings.bgOpacity + '%';
+            document.getElementById('autoLaunch').checked = defaultSettings.autoLaunch;
             
             // 更新当前设置
             currentSettings = defaultSettings;
@@ -1000,6 +1027,9 @@
             
             // 保存到本地存储
             localStorage.setItem('widgetSettings', JSON.stringify(currentSettings));
+            
+            // 发送开机自启设置到主进程
+            ipcRenderer.send('set-auto-launch', false);
         }
 
         function applySettings() {
@@ -1075,15 +1105,117 @@
             }
         }
 
+        // 数据持久化功能
+        function saveData() {
+            const data = {
+                todos: [],
+                texts: [],
+                questTitle: questContent.querySelector('.quest-title').innerHTML,
+                questDescription: questContent.querySelector('.quest-description').innerHTML,
+                isQuestVisible: questVisible
+            };
+
+            const todoItems = editableArea.querySelectorAll('.todo-item');
+            todoItems.forEach(item => {
+                const checkbox = item.querySelector('.todo-checkbox');
+                const textDiv = item.querySelector('.todo-text');
+                data.todos.push({
+                    text: textDiv.innerHTML,
+                    completed: checkbox.checked
+                });
+            });
+
+            const textItems = editableArea.querySelectorAll('.text-item');
+            textItems.forEach(item => {
+                data.texts.push(item.innerHTML);
+            });
+
+            localStorage.setItem('stardewWidgetData', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('stardewWidgetData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+
+                    editableArea.innerHTML = '';
+
+                    data.texts.forEach(textHTML => {
+                        const textItem = document.createElement('div');
+                        textItem.className = 'text-item';
+                        textItem.contentEditable = true;
+                        textItem.innerHTML = textHTML;
+                        editableArea.appendChild(textItem);
+                    });
+
+                    data.todos.forEach(todo => {
+                        const todoItem = document.createElement('div');
+                        todoItem.className = 'todo-item';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'todo-checkbox';
+                        checkbox.checked = todo.completed;
+                        checkbox.onchange = function() {
+                            toggleTodoCompletion(this);
+                        };
+
+                        const todoText = document.createElement('div');
+                        todoText.className = 'todo-text';
+                        todoText.contentEditable = true;
+                        todoText.innerHTML = todo.text;
+
+                        if (todo.completed) {
+                            todoText.classList.add('completed');
+                            const lightColor = lightenColor(currentSettings.fontColor, 80);
+                            todoText.style.color = lightColor;
+                            checkbox.style.backgroundColor = 'var(--checkbox-bg, #5c3a18)';
+                            checkbox.style.borderColor = 'var(--checkbox-border, #5c3a18)';
+                        }
+
+                        todoItem.appendChild(checkbox);
+                        todoItem.appendChild(todoText);
+                        editableArea.appendChild(todoItem);
+                    });
+
+                    if (data.questTitle) {
+                        questContent.querySelector('.quest-title').innerHTML = data.questTitle;
+                    }
+                    if (data.questDescription) {
+                        questContent.querySelector('.quest-description').innerHTML = data.questDescription;
+                    }
+                    if (data.isQuestVisible) {
+                        questContent.style.display = 'block';
+                        editableArea.style.display = 'none';
+                        refreshBtn.style.display = 'block';
+                        questVisible = true;
+                    }
+                } catch (e) {
+                    console.error('加载数据失败:', e);
+                    addText(false);
+                    addTodo(false);
+                }
+            } else {
+                addText(false);
+                addTodo(false);
+            }
+        }
+
+        // 页面加载时保存数据
+        window.addEventListener('beforeunload', saveData);
+
+        // 定期自动保存（每30秒）
+        setInterval(saveData, 30000);
+
         // 初始化设置
         document.addEventListener('DOMContentLoaded', function() {
-            // 加载保存的设置
             loadSettings();
             updateSelectionColor();
+            loadData();
             
-            // 添加示例内容
-            addText(false);
-            addTodo(false);
+            // 请求开机自启状态
+            ipcRenderer.send('get-auto-launch-status');
             
             // 透明度滑块事件
             const opacitySlider = document.getElementById('bgOpacity');

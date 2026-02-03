@@ -41,6 +41,20 @@ ipcMain.on('get-window-size', () => {
     }
 });
 
+ipcMain.on('set-auto-launch', (event, enable) => {
+    app.setLoginItemSettings({
+        openAtLogin: enable,
+        path: process.execPath,
+        args: []
+    });
+    mainWindow.webContents.send('auto-launch-status', enable);
+});
+
+ipcMain.on('get-auto-launch-status', () => {
+    const settings = app.getLoginItemSettings();
+    mainWindow.webContents.send('auto-launch-status', settings.openAtLogin);
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
